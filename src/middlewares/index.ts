@@ -33,17 +33,20 @@ export const isAuthenticated = async (req: express.Request, res: express.Respons
 
         console.log("Token received:", token);
 
-        // Verify JWT
-        jwt.verify(token, process.env.JWT_SECRET, (err: any, decoded: JwtPayload) => {
-            if (err) {
-                console.error("JWT Verification error:", err);
-                return res.sendStatus(402);
-            }
-
-            console.log("Decoded JWT:", decoded); 
-
-            req.identity = decoded;
+        const decoded = await new Promise((resolve, reject) => {
+            jwt.verify(token, process.env.JWT_SECRET, (err: any, decoded: JwtPayload) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(decoded);
+                }
+            });
         });
+
+        console.log("Decoded JWT:", decoded); 
+
+        req.identity = decoded;
+        next();
         
     } catch (error) {
         console.error("Error:", error);
